@@ -1,0 +1,18 @@
+# 执行job的阶段 按顺序串行执行
+stages:
+  - build
+
+# 自定义阶段build的job流程
+build: # 自定义名字
+  stage: build # 指定这阶段操作的名称
+  only: # 指定那些分支会进入该处理流程
+    - master # 正式环境
+  tags:
+    - fuse-runner
+  script:
+    - npm install
+    - npm run build
+    - cd dist
+    - tar -czvf dist.tar.gz *
+    - curl ${INTE_URL}/api/docs/upload/${CI_PROJECT_NAME} -F "file=@./dist.tar.gz"  -v -k
+    - rm -rf *.gz
