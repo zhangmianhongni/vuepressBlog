@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vuepress dev",
     "build": "vuepress build",
-    "deploy": "bash deploy.sh"
+    "deploy": "sh deploy.sh"
   },
   "license": "MIT",
   "devDependencies": {
