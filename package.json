@@ -9,7 +9,7 @@
   },
   "repository": "https://gitlab.bingosoft.net/fuse/docs/templates/default.git",
   "scripts": {
-    "dev": "vuepress dev",
+    "dev": "vuepress dev --temp .temp",
     "build": "vuepress build",
     "deploy": "sh deploy.sh"
   },
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@vuepress/plugin-back-to-top": "^1.0.0",
     "@vuepress/plugin-medium-zoom": "^1.0.0",
+    "@vuepress/theme-blog": "^2.3.2",
     "vuepress": "^1.0.0"
   },
   "dependencies": {
