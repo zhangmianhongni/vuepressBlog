@@ -144,7 +144,8 @@ function getAiComprehensiveSidebar(){
   return [
     '',
     'ai',
-    '1'
+    'middle-platform',
+    'faas'
   ]
 }
 
