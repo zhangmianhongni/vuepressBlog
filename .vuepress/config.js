@@ -145,7 +145,7 @@ function getAiComprehensiveSidebar(){
     '',
     'ai',
     'middle-platform',
-    'faas'
+    'bi-function'
   ]
 }
 
