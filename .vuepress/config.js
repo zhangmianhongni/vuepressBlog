@@ -171,6 +171,7 @@ function getAiNlpSidebar(){
 function getAiKgSidebar(){
   return [
     '',
+    'summarize',
   ]
 }
 
