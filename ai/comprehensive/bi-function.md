@@ -10,12 +10,12 @@
 
 ## 事件和触发器
 
-触发器在触发函数时会将事件传递给函数。事件在传递时以一个特定的数据结构体现，数据结构格式在传递时均为 JSON 格式，并以函数 event 入参的方式传递给云函数。
+触发器在触发函数时会将事件数据（业务参数）传递给函数。事件在传递时以一个特定的数据结构体现，数据结构格式在传递时均为 JSON 格式，并以函数入参的方式传递给函数。
 
 ![图 1](../../assets/bi-function_1605148241024.png)  
 
 >触发事件的 JSON 数据内容，在不同的语言环境下将会转换为各自语言的数据结构或对象，无需在代码中自行进行从 JSON 结构到数据结构的转换。
->例如，在 Python 环境中，JSON 数据内容会转变为一个复杂 dict 对象，即函数的入参 event 就是一个 Python 的复杂 dict 对象。而在 Golang 或 Java 中，入参是一个需要和 event 数据结构可以匹配的对象。
+>例如，在 Python 环境中，JSON 数据内容会转变为一个复杂 dict 对象，即函数的入参 event 就是一个 Python 的复杂 dict 对象。而在 Java 中，入参是一个需要和 event 数据结构可以匹配的对象。
 
 ``` python
 def run(event, context):
@@ -55,7 +55,7 @@ def run(event, context):
 ### 运行时的工作
 
 - **获取设置** – 读取环境变量以获取有关函数和环境的详细信息。
-  - DAAS_FUNCTION_TASK_HANDLE – 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是没有表达式的文件的名称，method 是在文件中定义的方法或函数的名称。
+  - DAAS_FUNCTION_TASK_HANDLE – 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是文件的名称，method 是在文件中定义的方法或函数的名称。
   - DAAS_FUNCTION_TASK_ROOT – 包含函数代码的目录。
 - **初始化函数** – 加载函数文件并运行它包含的任何全局或静态代码。函数应该创建静态资源一次，然后将它们重复用于多个调用。
 - **调用函数处理程序** - 将事件和上下文对象传递给函数。
@@ -142,14 +142,11 @@ def run(event, context):
 
 ## 日志记录
 
-可在函数中通过 logging 库输出日志到日志服务，并允许标记在函数执行期间遇到的警告和错误。
+可在函数中通过 context对象里的logger输出日志到日志服务，并允许标记在函数执行期间遇到的警告和错误。
 
 ``` python
-import logging
-logger = logging.getLogger()
-
 def run(event, context):
-    logger.info('Python HTTP trigger function processed a request.')
+    context.logger.info('Python HTTP trigger function processed a request.')
 ```
 
 ## 多个函数
@@ -159,4 +156,4 @@ def run(event, context):
 
 ## 注意事项
 
-- 代码文件在打包时候，计算hash值并保存起来，在使用代码时下载代码包并执行完整性检查。
+- 代码文件在打包时候，计算md5值并保存起来，在使用代码时下载代码包并执行完整性检查。
