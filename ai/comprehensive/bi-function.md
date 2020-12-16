@@ -55,8 +55,8 @@ def run(event, context):
 ### 运行时的工作
 
 - **获取设置** – 读取环境变量以获取有关函数和环境的详细信息。
-  - DAAS_FUNCTION_TASK_HANDLE – 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是文件的名称，method 是在文件中定义的方法或函数的名称。
-  - DAAS_FUNCTION_TASK_ROOT – 包含函数代码的目录。
+  - BI_FUNCTION_TASK_HANDLE – 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是文件的名称，method 是在文件中定义的方法或函数的名称。
+  - BI_FUNCTION_TASK_ROOT – 包含函数代码的目录。
 - **初始化函数** – 加载函数文件并运行它包含的任何全局或静态代码。函数应该创建静态资源一次，然后将它们重复用于多个调用。
 - **调用函数处理程序** - 将事件和上下文对象传递给函数。
 - **处理错误** – 如果出现错误，请调用初始化错误 API 并立即退出。
@@ -105,18 +105,20 @@ String envStr = System.getenv("MY_ENV_STRING");
 
 1. key 必须以字母 [a-zA-Z] 开头，只能包含字母数字字符和下划线（[a-zA-Z0-9_]）。
 2. 预留的环境变量 key 无法配置。预留的 key 包括：
-   1. DAAS_开头的 key，例如 DAAS_FUNCTION_ENVIRONMENT。
+   1. BI_开头的 key，例如 BI_FUNCTION_ENVIRONMENT。
    2. 运行时本身在使用的 key，例如 PYTHONPATH。
 
 ### 预留环境变量
 
 |环境变量|描述|
 |---|---|
-|DAAS_FUNCTION_ENVIRONMENT| 可以将 **DAAS_FUNCTION_ENVIRONMENT** 设置为：Development 和 Production。 如果未设置 **DAAS_FUNCTION_ENVIRONMENT**，则在本地环境中默认为 Development，在 部署环境 中默认为 Production。
-|DAAS_FUNCTION_NAME| 函数名称|
-|DAAS_FUNCTION_VERSION| 函数版本|
-|DAAS_FUNCTION_TASK_ROOT | 函数代码的路径|
-|DAAS_FUNCTION_TASK_HANDLE | 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是没有表达式的文件的名称，method 是在文件中定义的方法或函数的名称。|
+|BI_FUNCTION_ENVIRONMENT| 可以将 **BI_FUNCTION_ENVIRONMENT** 设置为：Development 和 Production。 如果未设置 **BI_FUNCTION_ENVIRONMENT**，则在本地环境中默认为 Development，在 部署环境 中默认为 Production。
+|BI_FUNCTION_ID| 函数ID|
+|BI_FUNCTION_CODE| 函数CODE|
+|BI_FUNCTION_NAME| 函数名称|
+|BI_FUNCTION_VERSION| 函数版本|
+|BI_FUNCTION_TASK_ROOT | 函数代码的路径|
+|BI_FUNCTION_TASK_HANDLE | 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是没有表达式的文件的名称，method 是在文件中定义的方法或函数的名称。|
 
 ### 环境变量安全
 
