@@ -4,32 +4,84 @@
 
 函数是管理、运行的基本单元，通常由一系列配置与一系列可运行代码/软件包组成。
 
-## 什么是函数服务
+### 什么是函数服务
 
 利用函数服务，您可以运行函数以处理各种事件、业务和预测。您可以通过使用函数服务的 API 或使用BingoInsightEvent事件服务发送事件来调用函数。
 
-## 事件和触发器
+### 函数类型
+
+- 第三方接口函数（HTTP）
+- 第三方界面（WEB）
+- 交互式编程函数（NOTEBOOK）
+- 自定义函数（用户上传程序包、机器学习训练）
+
+### 函数配置
+
+- Python：标准格式：`file.method`，其中 file 是文件的名称，method 是在文件中定义的方法或函数的名称。
+- Java：标准格式：`package.Class::method`，package是包名，Class是类名，method是方法。例如：example.Handler::handleRequest。
+- c / c++：标准格式：`file.method`，其中 file 是文件的名称，method 是在文件中定义的方法或函数的名称。
+- Matlab：标准格式：`file.m`，其中 file 是文件的名称，文件中定义的方法名称必须和文件名一致。
+
+## 函数事件和函数触发器
 
 触发器在触发函数时会将事件数据（业务参数）传递给函数。事件在传递时以一个特定的数据结构体现，数据结构格式在传递时均为 JSON 格式，并以函数入参的方式传递给函数。
 
-![图 1](../../assets/bi-function_1605148241024.png)  
-
->触发事件的 JSON 数据内容，在不同的语言环境下将会转换为各自语言的数据结构或对象，无需在代码中自行进行从 JSON 结构到数据结构的转换。
+>触发函数的 JSON 数据内容，在不同的语言环境下将会转换为各自语言的数据结构或对象，无需在代码中自行进行从 JSON 结构到数据结构的转换。
 >例如，在 Python 环境中，JSON 数据内容会转变为一个复杂 dict 对象，即函数的入参 event 就是一个 Python 的复杂 dict 对象。而在 Java 中，入参是一个需要和 event 数据结构可以匹配的对象。
 
+`Python`
+
 ``` python
-def run(event, context):
+def invoke(event, context):
     return f'{event['data']}'
 ```
 
-### 调用类型
+`Java`
 
-默认所有函数都支持异步调用，同步调用则必须在部署的时候选择部署服务。调用的时候必须带上`invokeType`参数来区分是同步调用还是异步调用。
+``` java
+public static Map<String, Object> invoke(Map<String, Object> event, Map<String, Object> context){
+    int a = (Integer) event.get("a");
+    int b = (Integer) event.get("b");
+    Map<String, Object> result = new HashMap<>();
+    result.put("result", a + b);
+    return result;
+}
+```
 
-1. 同步调用 - 同步调用函数将会在调用请求发出后持续等待函数的执行结果返回。
-2. 异步调用 - 异步调用将不会等待结果返回，只发出请求并获得当前请求的 Request ID
+`C / C++`
 
-### 触发方式
+``` c
+struct Result invoke(struct Event event, struct Context context){
+    struct Result result = {event.a + event.b};
+    return result;
+}
+```
+
+### 调用方式
+
+默认所有函数都支持异步调用，同步调用则必须在部署的时候选择部署服务。调用的时候必须带上`invocationType`参数来区分是同步调用还是异步调用。不同的调用方式有不同的执行处理。
+
+|调用方式|处理方式|
+|---|---|
+|同步调用|- 通过API、HTTP接口调用函数的方式为同步调用。<br> - 使用同步调用执行函数期间，平台不会返回执行结果，并需要持续等待。<br> - 在函数执行完成后，平台会将函数的返回值通过json格式放回给调用方。|
+|异步调用|- 使用异步方式执行函数，平台会在接受到请求后，将不会立即放回结果，只会返回执行请求ID。<br> - 在函数执行完成后，函数的返回值会以JSON格式文件保存在指定的目录。<br> - 用户在函数执行完成后，可以通过界面或者请求ID查询结果API，获得该异步调用函数的返回值。|
+
+#### 异步调用
+
+![图 1](../../assets/bi-function_1610693106938.png)  
+
+
+### 返回值
+
+当函数中的代码返回具体值时，通常返回特定的数据结果。例如：
+
+|运行时|返回数据结构类型|
+|---|---|
+|Python|`dict`数据结构|
+|C / C++|`Struct`结构体|
+|Java|`Map<String, Object>`结构|
+
+### 函数触发方式
 
 函数的触发方式通常有3种：
 
@@ -50,8 +102,6 @@ def run(event, context):
 
 > 运行时通常包含一个程序包，在调用函数之前，会初始化运行时，并执行运行时程序包，也可以使用docker把运行环境、依赖库和程序包打包成镜像。
 
-![图 2](../../assets/bi-function_1605149194630.png)  
-
 ### 运行时的工作
 
 - **获取设置** – 读取环境变量以获取有关函数和环境的详细信息。
@@ -67,13 +117,12 @@ def run(event, context):
 开始于执行 init 引导程序文件，开发者可以根据需要在 init 中自定义实现个性化操作，直接处理或调用其他可执行程序文件来完成初始化操作。以下是在初始化阶段完成的基础操作：
 
 - 设定运行时依赖库的路径及环境变量等。
-- 加载自定义语言及版本依赖的库文件及扩展程序等，如仍有依赖文件需要实时拉取，可下载至 /tmp 目录。
+- 加载语言及版本依赖的库文件及扩展程序等，如仍有依赖文件需要实时拉取，可下载至 /tmp 目录。
 - 创建上下文对象
-解析函数文件，并执行函数调用前所需的全局操作或初始化程序（如开发工具包客户端 HTTP CLIENT 等初始化、数据库连接池创建等），便于调用阶段复用。
-启动安全、监控等插件。
-初始化阶段完成后，需要主动调用运行时 API，访问初始化就绪接口 /runtime/init/ready 通知 SCF，Custom Runtime 运行时已完成初始化，进入就绪状态，否则 SCF 会持续等待，直到达到配置的初始化超时时间后，结束 Custom Runtime 并返回初始化超时错误。若重复通知，则会以首次访问时间作为就绪状态时间结点。
+- 下载并解析函数文件，并执行函数调用前所需的全局操作或初始化程序（如开发工具包客户端 HTTP CLIENT 等初始化、数据库连接池创建等），便于调用阶段复用。
+- 启动安全、监控等插件。
 
-## 运行时环境变量（Environment Variables）
+### 运行时环境变量（Environment Variables）
 
 运行时环境变量是与某个函数一起部署的键值对。这些变量仅与该函数相关联，因此它们对您系统中的其他函数不可见。
 
@@ -84,13 +133,23 @@ def run(event, context):
 
 要在函数代码中的环境变量，请使用编程语言的标准方法。
 
+`Python`
+
 ``` python
 import os
 env_str = os.environ['MY_ENV_STRING']
 ```
 
+`Java`
+
 ``` java
 String envStr = System.getenv("MY_ENV_STRING");
+```
+
+`C / C++`
+
+``` c
+char *envStr = getenv("MY_ENV_STRING");
 ```
 
 ### 使用场景
@@ -105,20 +164,23 @@ String envStr = System.getenv("MY_ENV_STRING");
 
 1. key 必须以字母 [a-zA-Z] 开头，只能包含字母数字字符和下划线（[a-zA-Z0-9_]）。
 2. 预留的环境变量 key 无法配置。预留的 key 包括：
-   1. BI_开头的 key，例如 BI_FUNCTION_ENVIRONMENT。
+   1. BI_开头的 key，例如 BI_FUNCTION_ID。
    2. 运行时本身在使用的 key，例如 PYTHONPATH。
 
 ### 预留环境变量
 
+平台中默认会使用一些预留的环境变量，默认使用BI_FUNCTION前缀，用户在定义自定义环境变量的时候不能使用和预留环境变量一样的Key。以下是部分预留的环境变量：
+
 |环境变量|描述|
 |---|---|
-|BI_FUNCTION_ENVIRONMENT| 可以将 **BI_FUNCTION_ENVIRONMENT** 设置为：Development 和 Production。 如果未设置 **BI_FUNCTION_ENVIRONMENT**，则在本地环境中默认为 Development，在 部署环境 中默认为 Production。
+|BI_FUNCTION_CURRENT_ENVIRONMENT| 可以将 **BI_FUNCTION_CURRENT_ENVIRONMENT**设置为：development 和 production。 如果未设置**BI_FUNCTION_CURRENT_ENVIRONMENT**，则在本地环境中默认为 development，在 部署环境 中默认为 production。
+|BI_RUNTIME| 函数的运行时|
 |BI_FUNCTION_ID| 函数ID|
 |BI_FUNCTION_CODE| 函数CODE|
 |BI_FUNCTION_NAME| 函数名称|
 |BI_FUNCTION_VERSION| 函数版本|
-|BI_FUNCTION_TASK_ROOT | 函数代码的路径|
-|BI_FUNCTION_TASK_HANDLE | 处理程序的位置（来自函数的配置）。标准格式为 file.method，其中 file 是没有表达式的文件的名称，method 是在文件中定义的方法或函数的名称。|
+|BI_FUNCTION_TASK_ROOT | 函数代码默认执行路径|
+|BI_FUNCTION_TASK_HANDLE | 函数入口处理程序的位置（来自函数的配置），不同语言的配置不一样。标准格式为 file.method，其中 file 是没有表达式的文件的名称，method 是在文件中定义的方法或函数的名称。|
 
 ### 环境变量安全
 
@@ -153,7 +215,7 @@ def run(event, context):
 
 ## 多个函数
 
-- 每个部署的函数都与其他所有函数（甚至是从同一个源文件部署的函数）隔离。具体来说，这些函数不会共享内存、全局变量、文件系统或其他状态。 `暂不实现`
+- 每个部署的函数都与其他所有函数（甚至是从同一个源文件部署的函数）隔离。具体来说，这些函数不会共享内存、全局变量、文件系统或其他状态。
 - 多个函数的编排可以通过BingoInsightFlow数据流服务来进行函数编排
 
 ## 注意事项
@@ -163,8 +225,22 @@ def run(event, context):
 ## 相关规范
 
 用户在使用平台支持的语言编写自定义函数时，需要遵循一定的范式，包含以下：
-1、入口函数： 平台在调用函数时，首先会寻找入口函数作为入口，执行用户的代码。 在入口函数中，用户需对函数参数进行处理，并且可任意调用代码中的任何其他方法。
-2、函数入参： 是指函数在被触发调用时所传递给函数的内容。通常情况下，函数入参包括 event 入参和 context 入参两部分，但根据开发语言和环境的不同，入参个数可能有所不同
-3、函数返回：
 
-![图 1](../../assets/bi-function_1606356847577.png)  
+1. 入口函数： 平台在调用函数时，首先会寻找入口函数作为入口，执行用户的代码。 在入口函数中，用户需对函数参数进行处理，并且可任意调用代码中的任何其他方法。
+2. 函数入参： 是指函数在被触发调用时所传递给函数的内容。通常情况下，函数入参包括 event 入参和 context 入参两部分，但根据开发语言和环境的不同，入参个数可能有所不同
+
+## 函数状态
+
+### 服务状态
+
+- 待部署（UNDEPLOY）
+- 已部署（DEPLOYED）
+- 部署中（DEPLOYING）
+- 部署失败（FAILED）
+
+### 执行状态
+
+- 待执行（PENDING）
+- 执行中（RUNNING）
+- 执行成功（SUCCESS）
+- 执行失败（FAILED）
